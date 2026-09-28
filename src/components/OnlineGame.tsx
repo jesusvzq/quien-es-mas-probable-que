@@ -63,7 +63,13 @@ export function OnlineGame({
 
   const { view } = room;
   if (!view) {
-    return <WaitingScreen message="Conectando..." />;
+    return (
+      <WaitingScreen
+        message={
+          room.status === "reconnecting" ? "Reconectando..." : "Conectando..."
+        }
+      />
+    );
   }
 
   if (view.phase === "waiting-for-player2") {

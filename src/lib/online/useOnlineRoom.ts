@@ -11,7 +11,7 @@ import type { RoomView } from "./types";
 
 const POLL_INTERVAL_MS = 1500;
 
-type Status = "idle" | "working" | "ready" | "error";
+type Status = "idle" | "working" | "reconnecting" | "ready" | "error";
 
 type OnlineRoomState = {
   code: string | null;
@@ -36,7 +36,7 @@ export function useOnlineRoom() {
       code: session?.code ?? null,
       token: session?.token ?? null,
       view: null,
-      status: session ? "working" : "idle",
+      status: session ? "reconnecting" : "idle",
       error: null,
     };
   });

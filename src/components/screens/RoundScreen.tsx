@@ -34,7 +34,7 @@ export function RoundScreen({
 
         <div className="rounded-2xl bg-surface p-6 text-center shadow-sm">
           <p className="text-lg font-semibold">
-            Pásale el móvil a {secondVoterName}
+            Es el turno de {secondVoterName}
           </p>
           <p className="mt-2 text-sm text-foreground/60">
             Que nadie más mire la pantalla.
