@@ -20,6 +20,7 @@ export function createRoom(
     results: [],
     phase: "waiting-for-player2",
     players: [{ name: hostName, token: hostToken }, null],
+    advanceReady: [false, false],
   };
 }
 
@@ -75,13 +76,33 @@ export function castVote(
       },
     ],
     phase: "reveal",
+    advanceReady: [false, false],
   };
 }
 
-export function advanceRound(room: RoomState): RoomState {
+/** Marks `playerIndex` as ready to leave the reveal screen. The round only
+ * actually advances once both players have confirmed — one player
+ * continuing never drags the other into the next round. */
+export function confirmAdvance(
+  room: RoomState,
+  playerIndex: PlayerIndex
+): RoomState {
   if (room.phase !== "reveal") return room;
+  if (room.advanceReady[playerIndex]) return room; // already confirmed, idempotent
+
+  const advanceReady: [boolean, boolean] = [...room.advanceReady];
+  advanceReady[playerIndex] = true;
+  const updated = { ...room, advanceReady };
+
+  if (!advanceReady[0] || !advanceReady[1]) {
+    return updated;
+  }
+  return advanceRound(updated);
+}
+
+function advanceRound(room: RoomState): RoomState {
   if (room.currentRound >= room.totalRounds) {
-    return { ...room, phase: "summary" };
+    return { ...room, phase: "summary", advanceReady: [false, false] };
   }
   const statement = pickStatement(room.usedStatements);
   const nextFirstVoter: PlayerIndex = room.firstVoterIndex === 0 ? 1 : 0;
@@ -93,6 +114,7 @@ export function advanceRound(room: RoomState): RoomState {
     currentStatement: statement,
     votes: [null, null],
     phase: "voting",
+    advanceReady: [false, false],
   };
 }
 
@@ -108,6 +130,7 @@ export function replayRoom(room: RoomState): RoomState {
     votes: [null, null],
     results: [],
     phase: "voting",
+    advanceReady: [false, false],
   };
 }
 
@@ -134,6 +157,7 @@ export function toView(room: RoomState, viewerToken: string): RoomView {
     phase: room.phase,
     players: [room.players[0]?.name ?? null, room.players[1]?.name ?? null],
     votes,
+    advanceReady: room.advanceReady,
     you,
   };
 }

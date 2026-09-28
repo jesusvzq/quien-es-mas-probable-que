@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  advanceRound,
   castVote,
+  confirmAdvance,
   createRoom,
   joinRoom,
   replayRoom,
@@ -56,6 +56,7 @@ describe("castVote", () => {
     expect(s.phase).toBe("reveal");
     expect(s.results).toHaveLength(1);
     expect(s.results[0].matched).toBe(true);
+    expect(s.advanceReady).toEqual([false, false]);
   });
 
   it("records a non-match correctly", () => {
@@ -80,30 +81,58 @@ describe("castVote", () => {
   });
 });
 
-describe("advanceRound", () => {
-  it("alternates firstVoterIndex and increments the round", () => {
-    const room = setupRoom();
-    let s = castVote(room, 0, 1);
+describe("confirmAdvance", () => {
+  function revealedRoom(totalRounds = 10): RoomState {
+    let s = setupRoom(totalRounds);
+    s = castVote(s, 0, 1);
     s = castVote(s, 1, 1);
-    expect(s.firstVoterIndex).toBe(0);
-    s = advanceRound(s);
+    return s;
+  }
+
+  it("stays in reveal after only one player confirms", () => {
+    const room = revealedRoom();
+    const s = confirmAdvance(room, 0);
+    expect(s.phase).toBe("reveal");
+    expect(s.advanceReady).toEqual([true, false]);
+  });
+
+  it("does not drag the other player along: currentRound only changes once both confirm", () => {
+    const room = revealedRoom();
+    let s = confirmAdvance(room, 0);
+    expect(s.currentRound).toBe(1);
+    s = confirmAdvance(s, 1);
+    expect(s.currentRound).toBe(2);
+  });
+
+  it("alternates firstVoterIndex and increments the round once both confirm", () => {
+    const room = revealedRoom();
+    expect(room.firstVoterIndex).toBe(0);
+    let s = confirmAdvance(room, 0);
+    s = confirmAdvance(s, 1);
     expect(s.phase).toBe("voting");
     expect(s.currentRound).toBe(2);
     expect(s.firstVoterIndex).toBe(1);
+    expect(s.advanceReady).toEqual([false, false]);
+  });
+
+  it("confirming twice from the same player is idempotent and doesn't advance alone", () => {
+    const room = revealedRoom();
+    let s = confirmAdvance(room, 0);
+    s = confirmAdvance(s, 0);
+    expect(s.phase).toBe("reveal");
+    expect(s.advanceReady).toEqual([true, false]);
   });
 
   it("moves to summary on the last round instead of drawing another statement", () => {
-    const room = setupRoom(1);
-    let s = castVote(room, 0, 1);
-    s = castVote(s, 1, 1);
-    expect(s.currentRound).toBe(1);
-    s = advanceRound(s);
+    const room = revealedRoom(1);
+    let s = confirmAdvance(room, 0);
+    s = confirmAdvance(s, 1);
     expect(s.phase).toBe("summary");
   });
 
   it("is a no-op outside the reveal phase", () => {
     const room = setupRoom();
-    expect(advanceRound(room)).toBe(room);
+    expect(confirmAdvance(room, 0)).toBe(room);
   });
 });
 
@@ -112,13 +141,15 @@ describe("replayRoom", () => {
     const room = setupRoom(1);
     let s = castVote(room, 0, 1);
     s = castVote(s, 1, 1);
-    s = advanceRound(s); // -> summary
+    s = confirmAdvance(s, 0);
+    s = confirmAdvance(s, 1); // -> summary
     s = replayRoom(s);
     expect(s.phase).toBe("voting");
     expect(s.currentRound).toBe(1);
     expect(s.results).toHaveLength(0);
     expect(s.players).toEqual(room.players);
     expect(s.currentStatement).not.toBeNull();
+    expect(s.advanceReady).toEqual([false, false]);
   });
 
   it("is a no-op outside the summary phase", () => {

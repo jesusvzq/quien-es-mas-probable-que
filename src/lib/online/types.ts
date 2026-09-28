@@ -24,6 +24,11 @@ export type RoomState = {
   results: RoundResult[];
   phase: OnlinePhase;
   players: [OnlinePlayerSlot, OnlinePlayerSlot];
+  /** Who has confirmed leaving the current `reveal` screen. The round only
+   * actually advances once both are true — one player continuing never
+   * drags the other along. Reset to [false, false] whenever a new `reveal`
+   * phase begins. */
+  advanceReady: [boolean, boolean];
 };
 
 /** What a client actually receives — never includes tokens, and masks the

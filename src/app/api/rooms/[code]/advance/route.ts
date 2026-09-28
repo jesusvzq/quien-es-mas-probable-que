@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { findPlayerIndex } from "@/lib/online/auth";
 import { isOnlineModeEnabled, readRoom, writeRoom } from "@/lib/online/redis";
-import { advanceRound, toView } from "@/lib/online/room";
+import { confirmAdvance, toView } from "@/lib/online/room";
 import { normalizeCode } from "@/lib/online/validate";
 
 export async function POST(
@@ -27,11 +27,12 @@ export async function POST(
   if (!room) {
     return NextResponse.json({ error: "Room not found" }, { status: 404 });
   }
-  if (findPlayerIndex(room, token) === null) {
+  const playerIndex = findPlayerIndex(room, token);
+  if (playerIndex === null) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const updated = advanceRound(room);
+  const updated = confirmAdvance(room, playerIndex);
   await writeRoom(updated);
 
   return NextResponse.json(toView(updated, token));

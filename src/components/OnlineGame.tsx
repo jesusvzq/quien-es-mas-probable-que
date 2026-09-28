@@ -79,6 +79,9 @@ export function OnlineGame({
   }
 
   if (view.phase === "reveal") {
+    if (view.advanceReady[view.you]) {
+      return <WaitingScreen message="Esperando a que tu rival continúe..." />;
+    }
     return <OnlineRevealScreen view={view} onAdvance={room.advance} />;
   }
 

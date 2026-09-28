@@ -62,6 +62,11 @@ export type RoomState = {
   results: RoundResult[];
   phase: OnlinePhase;
   players: [OnlinePlayerSlot, OnlinePlayerSlot];
+  /** Who has confirmed leaving the current `reveal` screen. The round only
+   * actually advances once both are true — one player continuing never
+   * drags the other along. Reset to [false, false] whenever a new `reveal`
+   * phase begins. */
+  advanceReady: [boolean, boolean];
 };
 
 /** What a client actually receives — never includes tokens, and masks the
@@ -112,7 +117,8 @@ it can be unit tested the same way, independent of Redis:
 export function createRoom(code: string, hostName: string, hostToken: string, totalRounds: number): RoomState { ... }
 export function joinRoom(room: RoomState, name: string, token: string): RoomState { ... }
 export function castVote(room: RoomState, playerIndex: PlayerIndex, vote: PlayerIndex): RoomState { ... }
-export function advanceRound(room: RoomState): RoomState { ... }
+export function confirmAdvance(room: RoomState, playerIndex: PlayerIndex): RoomState { ... }
+export function replayRoom(room: RoomState): RoomState { ... }
 export function toView(room: RoomState, viewerToken: string): RoomView { ... }
 ```
 
@@ -121,6 +127,13 @@ slot `viewerToken` belongs to, and nulls out the *other* slot's vote unless
 `room.phase` is `"reveal"` or `"summary"`. The API routes below only ever
 serialize rooms through `toView` — the raw `RoomState` (with both votes and
 both tokens) never leaves the server.
+
+`confirmAdvance` mirrors `castVote`'s two-slot pattern: it marks the caller's
+`advanceReady` slot true and only performs the actual round transition (the
+internal `advanceRound` helper) once *both* slots are true, resetting them
+for the next reveal. One player tapping "siguiente ronda" never advances the
+other player's screen — they see a "waiting for tu rival" state
+(`view.advanceReady[view.you]`) until their opponent also confirms.
 
 ## API routes (Next.js Route Handlers)
 
@@ -135,7 +148,7 @@ Node runtime is fine for the rest.
 | `src/app/api/rooms/[code]/join/route.ts` | POST | Join as player 2. Body: `{ name }`. Returns `{ token }` |
 | `src/app/api/rooms/[code]/route.ts` | GET | Poll current state. Query: `?token=...`. Returns `RoomView` |
 | `src/app/api/rooms/[code]/vote/route.ts` | POST | Cast a vote. Body: `{ token, vote }` |
-| `src/app/api/rooms/[code]/advance/route.ts` | POST | Move from `reveal` to the next round (or to `summary` on the last one). Body: `{ token }` |
+| `src/app/api/rooms/[code]/advance/route.ts` | POST | Confirm leaving `reveal`; only advances to the next round (or `summary`) once both players have confirmed. Body: `{ token }` |
 | `src/app/api/rooms/[code]/replay/route.ts` | POST | Same players, new game, fresh draw. Body: `{ token }` |
 
 Every route:
@@ -230,8 +243,11 @@ behaves exactly as before once chosen.
 - **One reusable waiting screen**: `src/components/screens/online/WaitingScreen.tsx`
   is used at every synchronization point — the host's lobby (waiting for
   join, via `HostLobbyScreen`), mid-round (waiting for the opponent's vote,
-  driven by `view.votes[view.you] !== null` in `src/components/OnlineGame.tsx`),
-  and as the generic "conectando..." fallback while a session is resuming.
+  driven by `view.votes[view.you] !== null`), after tapping "siguiente
+  ronda"/"ver resultados" on the reveal screen while the opponent hasn't
+  confirmed yet (`view.advanceReady[view.you]`, both checked in
+  `src/components/OnlineGame.tsx`), and as the generic "conectando..."
+  fallback while a session is resuming.
 - **Screens**: `src/components/OnlineGame.tsx` switches on `RoomView.phase`
   across `CreateRoomScreen`, `JoinRoomScreen`, `HostLobbyScreen`,
   `OnlineRoundScreen` (no `handoff` phase — each device shows its own voting
@@ -324,9 +340,10 @@ git-ignored — never commit that file.
 
 - Unit tests for `src/lib/online/room.ts`'s pure functions, mirroring
   `src/lib/game/reducer.test.ts`: joining fills the second slot, voting
-  transitions `voting → reveal` only once both votes are in, `advanceRound`
-  alternates `firstVoterIndex` and stops at `totalRounds`, `toView` masks
-  the opponent's vote pre-reveal and never leaks tokens.
+  transitions `voting → reveal` only once both votes are in, `confirmAdvance`
+  only moves past `reveal` once both players have confirmed (never on just
+  one), alternates `firstVoterIndex` and stops at `totalRounds` once it does,
+  `toView` masks the opponent's vote pre-reveal and never leaks tokens.
 - A lightweight integration test (or a manual check) hitting the route
   handlers with an in-memory fake standing in for `@upstash/redis`'s
   `get`/`set`, since the pure logic is already covered by the unit tests

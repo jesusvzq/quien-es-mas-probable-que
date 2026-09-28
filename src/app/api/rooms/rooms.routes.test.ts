@@ -131,11 +131,23 @@ describe("room routes wiring", () => {
     expect(revealed.phase).toBe("reveal");
     expect(revealed.votes).toEqual([0, 0]);
 
-    const advanceRes = await advanceRoute(
+    // Only the host confirming doesn't advance the round for either player —
+    // both must confirm before it moves on.
+    const hostAdvanceRes = await advanceRoute(
       postJson(`http://x/api/rooms/${code}/advance`, { token: hostToken }),
       { params: { code } }
     );
-    expect((await advanceRes.json()).currentRound).toBe(2);
+    const hostAdvanceView = await hostAdvanceRes.json();
+    expect(hostAdvanceView.phase).toBe("reveal");
+    expect(hostAdvanceView.currentRound).toBe(1);
+
+    const guestAdvanceRes = await advanceRoute(
+      postJson(`http://x/api/rooms/${code}/advance`, { token: guestToken }),
+      { params: { code } }
+    );
+    const guestAdvanceView = await guestAdvanceRes.json();
+    expect(guestAdvanceView.phase).toBe("voting");
+    expect(guestAdvanceView.currentRound).toBe(2);
   });
 
   it("404s joining a room that doesn't exist", async () => {
