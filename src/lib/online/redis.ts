@@ -28,7 +28,7 @@ function getRedis(): Redis {
   return new Redis(credentials);
 }
 
-const ROOM_TTL_SECONDS = 60 * 60 * 2; // 2 hours
+const ROOM_TTL_SECONDS = 60 * 30; // 30 minutes
 
 export function roomKey(code: string): string {
   return `room:${code}`;
