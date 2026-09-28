@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fff5f7;
+  --foreground: #2a2140;
+  --surface: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1b1530;
+    --foreground: #f3f0ff;
+    --surface: #2a2245;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  overscroll-behavior-y: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
