@@ -5,11 +5,11 @@ import { useGame } from "@/context/GameContext";
 import { DrawScreen } from "@/components/screens/DrawScreen";
 import { RevealScreen } from "@/components/screens/RevealScreen";
 import { RoundScreen } from "@/components/screens/RoundScreen";
-import { RulesScreen } from "@/components/screens/RulesScreen";
 import { SetupScreen } from "@/components/screens/SetupScreen";
 import { SummaryScreen } from "@/components/screens/SummaryScreen";
+import { PreGameFlow } from "@/components/PreGameFlow";
 
-export function Game() {
+export function Game({ initialJoinCode }: { initialJoinCode?: string } = {}) {
   const { state, dispatch } = useGame();
 
   // Screens receive `state`/`dispatch` as props (rather than reading the
@@ -20,7 +20,11 @@ export function Game() {
   return (
     <AnimatePresence mode="wait">
       {state.phase === "rules" && (
-        <RulesScreen key="rules" dispatch={dispatch} />
+        <PreGameFlow
+          key="rules"
+          dispatch={dispatch}
+          initialJoinCode={initialJoinCode}
+        />
       )}
       {state.phase === "setup" && (
         <SetupScreen key="setup" dispatch={dispatch} />

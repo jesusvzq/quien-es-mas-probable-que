@@ -1,10 +1,10 @@
 # Phase 2: online room mode (implementation plan)
 
-This document is the detailed build plan for the online mode scoped in the
-original brief: each player joins from their own phone via a 4-letter room
-code, instead of passing one phone back and forth. It is **not implemented
-yet** — this is the plan to follow when it's greenlit, including exact
-manual steps in the Vercel dashboard.
+This document describes the online mode scoped in the original brief: each
+player joins from their own phone via a 4-letter room code, instead of
+passing one phone back and forth. **The code is implemented** (see
+[Client-side plan](#client-side-plan)); what's left is the manual Vercel
+setup below, done once per deployment.
 
 Nothing here changes the existing single-device mode. It stays the default,
 fully working with zero configuration; online mode only appears when the
@@ -220,26 +220,51 @@ token → apply the pure transform → write → respond with the view.
 
 ## Client-side plan
 
-- **Feature flag on load**: a small client component fetches
-  `/api/config` once on mount and only then decides whether to show a
-  "Jugar a distancia" (play remotely) option next to "Jugar" on the rules
-  screen. Default (flag off, or fetch fails) is exactly today's UI —
-  single-device only, no visible change.
-- **New reducer, same shape**: an `useOnlineRoom(code, token)` hook owns its
-  own small state machine (`idle → creating/joining → waiting → voting →
-  reveal → summary`), polling `GET /api/rooms/[code]?token=...` on an
-  interval (~1.5s) with `setInterval` + `AbortController` to cancel
-  in-flight requests on unmount, pausing the poll while a mutation
-  (vote/advance) is in flight to avoid racing your own optimistic update.
-- **Screens**: mostly reuse the existing `RoundScreen`/`RevealScreen`/
-  `SummaryScreen` visuals, minus the `handoff` phase (there's no phone to
-  pass — each device shows its own player's voting screen once, then a
-  "waiting for the other player..." spinner until the poll reports both
-  votes in).
-- **Sharing the room**: a join screen shows the 4-letter code in large text
-  plus a QR code (client-side, via the `qrcode` package rendering to a
-  `<canvas>`) encoding a URL like `https://yourapp.example/join/TXQP`, so
-  the second player can either type the code or scan.
+Implemented. Online mode gets its own component tree and hook, entirely
+separate from `GameContext`/`gameReducer` — `src/lib/game/types.ts`,
+`reducer.ts`, and `GameState`/`Phase` are untouched, so single-device mode
+behaves exactly as before once chosen.
+
+- **Rules → mode select**: `src/components/PreGameFlow.tsx` renders in place
+  of `RulesScreen` whenever `state.phase === "rules"` (wired in
+  `src/components/Game.tsx`). It pre-fetches `/api/config` on mount via
+  `useOnlineEnabled()` (`src/lib/online/useOnlineEnabled.ts`), so the flag is
+  already known by the time the user taps "Empezar" on the (unchanged)
+  `RulesScreen`. If the flag is off or still unresolved, it dispatches
+  `START_SETUP` — today's exact behavior, zero visible change. If it's on, it
+  shows `ModeSelectScreen` (single-device / create online / join online).
+- **Per-player "ready" step**: there is no separate ready toggle. Submitting
+  the name (+ rounds, for the host) form *is* the ready action, exactly like
+  the existing `SetupScreen` pattern — one editable form, one submit. The
+  host is placed in `waiting-for-player2` immediately after creating; the
+  joiner enters the game immediately after joining.
+- **`useOnlineRoom`** (`src/lib/online/useOnlineRoom.ts`) is the online
+  equivalent of the reducer: `createRoom`/`joinRoom`/`castVote`/`advance`/
+  `replay`/`reset`, persisting `{code, token}` to `sessionStorage`
+  (`src/lib/storage.ts`) so a refresh mid-game resumes polling, and polling
+  `GET /api/rooms/[code]?token=...` every ~1.5s with `AbortController`,
+  paused while a mutation is in flight.
+- **One reusable waiting screen**: `src/components/screens/online/WaitingScreen.tsx`
+  is used at every synchronization point — the host's lobby (waiting for
+  join, via `HostLobbyScreen`), mid-round (waiting for the opponent's vote,
+  driven by `view.votes[view.you] !== null` in `src/components/OnlineGame.tsx`),
+  and as the generic "conectando..." fallback while a session is resuming.
+- **Screens**: `src/components/OnlineGame.tsx` switches on `RoomView.phase`
+  across `CreateRoomScreen`, `JoinRoomScreen`, `HostLobbyScreen`,
+  `OnlineRoundScreen` (no `handoff` phase — each device shows its own voting
+  screen directly), `OnlineRevealScreen`, and `OnlineSummaryScreen`, all
+  under `src/components/screens/online/`. `OnlineRevealScreen`/
+  `OnlineSummaryScreen` share their presentational guts with the
+  single-device `RevealScreen`/`SummaryScreen` via extracted, dispatch-free
+  components `src/components/screens/shared/RevealCard.tsx` and
+  `SummaryCard.tsx`.
+- **Sharing the room**: `HostLobbyScreen` shows the 4-letter code in large
+  text plus a QR code (`qrcode` rendering to a `<canvas>`) encoding
+  `${origin}/join/{code}`. `src/app/join/[code]/page.tsx` renders the same
+  `<Game>` with `initialJoinCode` set: the rules screen still shows once, and
+  if online mode is enabled, "Empezar" skips mode-select and jumps straight
+  to the join screen with the code pre-filled (still editable); if disabled,
+  it silently falls back to single-device mode.
 - **Local dev testing**: open the app in two separate browser
   tabs/windows/devices — host in one, join in the other with the code shown
   in the first tab.

@@ -10,15 +10,18 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@upstash/redis": "^1.39.0",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^13.4.4",
     "next": "14.2.35",
+    "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

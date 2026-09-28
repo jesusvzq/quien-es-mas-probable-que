@@ -44,3 +44,4 @@ export type Action =
 
 export const MIN_ROUNDS = 10;
 export const MAX_ROUNDS = 50;
+export const MAX_NAME_LENGTH = 15;

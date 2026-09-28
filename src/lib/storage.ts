@@ -18,3 +18,32 @@ export function loadState(): GameState | null {
     return null;
   }
 }
+
+export type OnlineSession = { code: string; token: string };
+
+const ONLINE_SESSION_KEY = "qmp-online-room";
+
+export function saveOnlineSession(session: OnlineSession): void {
+  try {
+    sessionStorage.setItem(ONLINE_SESSION_KEY, JSON.stringify(session));
+  } catch {
+    // sessionStorage may be unavailable (private mode, disabled storage); ignore.
+  }
+}
+
+export function loadOnlineSession(): OnlineSession | null {
+  try {
+    const raw = sessionStorage.getItem(ONLINE_SESSION_KEY);
+    return raw ? (JSON.parse(raw) as OnlineSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearOnlineSession(): void {
+  try {
+    sessionStorage.removeItem(ONLINE_SESSION_KEY);
+  } catch {
+    // ignore
+  }
+}

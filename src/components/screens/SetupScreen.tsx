@@ -5,9 +5,7 @@ import { BigButton } from "@/components/ui/BigButton";
 import { RoundsWheel } from "@/components/ui/RoundsWheel";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import type { Action } from "@/lib/game/types";
-import { MAX_ROUNDS, MIN_ROUNDS } from "@/lib/game/types";
-
-const MAX_NAME_LENGTH = 15;
+import { MAX_NAME_LENGTH, MAX_ROUNDS, MIN_ROUNDS } from "@/lib/game/types";
 
 export function SetupScreen({ dispatch }: { dispatch: React.Dispatch<Action> }) {
   const [name1, setName1] = useState("");

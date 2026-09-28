@@ -2,17 +2,16 @@
 
 import { BigButton } from "@/components/ui/BigButton";
 import { ScreenShell } from "@/components/ui/ScreenShell";
-import type { Action } from "@/lib/game/types";
 
 const RULES = [
   'Aparece una frase: "¿Quién es más probable que...?".',
-  "Cada uno vota en secreto, primero uno y luego el otro, pasándoos el móvil.",
+  "Jugando en el mismo móvil, cada uno vota en secreto pasándoos el teléfono; jugando a distancia, cada uno vota desde su propio móvil a la vez.",
   "Podéis votaros a vosotros mismos.",
   "Si votáis a la misma persona, sumáis un punto entre los dos: la puntuación es común.",
   "Al final descubriréis cuánto os conocéis.",
 ];
 
-export function RulesScreen({ dispatch }: { dispatch: React.Dispatch<Action> }) {
+export function RulesScreen({ onContinue }: { onContinue: () => void }) {
   return (
     <ScreenShell>
       <div className="text-center">
@@ -33,9 +32,7 @@ export function RulesScreen({ dispatch }: { dispatch: React.Dispatch<Action> }) 
         ))}
       </ol>
 
-      <BigButton onClick={() => dispatch({ type: "START_SETUP" })}>
-        Empezar
-      </BigButton>
+      <BigButton onClick={onContinue}>Empezar</BigButton>
     </ScreenShell>
   );
 }
