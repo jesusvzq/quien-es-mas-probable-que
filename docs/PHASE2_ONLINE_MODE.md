@@ -84,39 +84,22 @@ at this scale, one retry is enough).
 
 ## Redis client wrapper
 
-```ts
-// src/lib/online/redis.ts
-import { Redis } from "@upstash/redis";
+Implemented in `src/lib/online/redis.ts`. **Env var names**: the
+`@upstash/redis` SDK's own `Redis.fromEnv()` looks for
+`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`, but Vercel's current
+Upstash/KV marketplace integration actually injects `KV_REST_API_URL` /
+`KV_REST_API_TOKEN` (plus `KV_REST_API_READ_ONLY_TOKEN`, `KV_URL`,
+`REDIS_URL`, which are unused here) — so `redis.ts` does **not** use
+`Redis.fromEnv()`. It reads `KV_REST_API_URL`/`KV_REST_API_TOKEN` first,
+falling back to `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` for a
+manually-created Upstash integration, and constructs `new Redis({ url,
+token })` directly. `isOnlineModeEnabled()` is true whenever either pair is
+present. The client is only constructed lazily, inside route handlers, so a
+misconfigured environment never crashes anything the client can reach
+directly — those routes 404 first via `isOnlineModeEnabled()`.
 
-// Both env vars are injected automatically by the Vercel/Upstash
-// integration (see "Manual Vercel setup" below). This throws if online
-// mode's own API routes are hit without them configured — but those routes
-// are only reachable if the feature flag (isOnlineModeEnabled) is on, and
-// the client never links to them otherwise.
-export const redis = Redis.fromEnv();
-
-export function isOnlineModeEnabled(): boolean {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  );
-}
-
-const ROOM_TTL_SECONDS = 60 * 60 * 2; // 2 hours
-
-export function roomKey(code: string): string {
-  return `room:${code}`;
-}
-
-export async function readRoom(code: string) {
-  return redis.get<RoomState>(roomKey(code));
-}
-
-export async function writeRoom(state: RoomState) {
-  await redis.set(roomKey(state.code), state, { ex: ROOM_TTL_SECONDS });
-}
-```
-
-(`RoomState` imported from `./types` — omitted above for brevity.)
+Room reads/writes go through `readRoom`/`writeRoom`, keyed by `roomKey(code)`
+= `room:{code}`, with the TTL (2 hours) refreshed on every write.
 
 ## Room logic (pure functions, unit-testable like the existing reducer)
 
@@ -300,17 +283,24 @@ and ready to go live:
 4. Pick a region close to your expected players (lower latency for the
    polling requests) and the **free tier** — a casual 2-player game is well
    within its limits.
-5. Confirm creation. Vercel automatically adds `UPSTASH_REDIS_REST_URL` and
-   `UPSTASH_REDIS_REST_TOKEN` as environment variables on the project, for
-   Production, Preview, and Development environments (Vercel shows exactly
-   which environments it applied them to — leave all three checked).
+5. Confirm creation. Vercel automatically adds several environment variables
+   to the project — in the current marketplace integration these are named
+   `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN`,
+   `KV_URL`, and `REDIS_URL` (only the first two are actually used by this
+   app; a project set up before Vercel's rename might instead see
+   `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` — both naming schemes
+   work, see [Redis client wrapper](#redis-client-wrapper)). Vercel shows
+   exactly which environments it applied them to (Production/Preview/
+   Development) — leave whatever it selects checked.
 6. Trigger a redeploy (or push a new commit) so the running deployment
    picks up the new environment variables — Vercel does not hot-reload env
    vars into an already-running deployment.
-7. Verify: open the deployed site, and the "Jugar a distancia" option
-   should now appear on the rules screen. If it doesn't, check **Settings →
-   Environment Variables** to confirm both keys are present, and check the
-   deployment's **Functions** logs for `/api/config` for errors.
+7. Verify: open the deployed site, tap "Empezar", and the mode-select screen
+   (single-device / create online / join online) should now appear instead
+   of going straight to setup. If it doesn't, check **Settings →
+   Environment Variables** to confirm the URL+token pair is present under
+   one of the two supported naming schemes, and check the deployment's
+   **Functions** logs for `/api/config` for errors.
 
 ### Local development against the same Redis instance
 
@@ -324,9 +314,11 @@ vercel env pull .env.local
 npm run dev
 ```
 
-`vercel env pull` writes `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`
-(and any other project env vars) into `.env.local`, which Next.js loads
-automatically and which is already git-ignored — never commit that file.
+`vercel env pull` writes whichever Redis env vars the project actually has
+(`KV_REST_API_URL`/`KV_REST_API_TOKEN` or `UPSTASH_REDIS_REST_URL`/
+`UPSTASH_REDIS_REST_TOKEN`, plus any other project env vars) into
+`.env.local`, which Next.js loads automatically and which is already
+git-ignored — never commit that file.
 
 ## Testing plan
 

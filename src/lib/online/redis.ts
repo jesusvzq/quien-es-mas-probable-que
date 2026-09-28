@@ -2,17 +2,30 @@ import { Redis } from "@upstash/redis";
 import { randomRoomCode } from "./codes";
 import type { RoomState } from "./types";
 
+// Vercel's Upstash/KV marketplace integration injects KV_REST_API_URL /
+// KV_REST_API_TOKEN; a manually-created Upstash Redis integration (or
+// `vercel env pull` against an older project) may instead use
+// UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN. Accept either.
+function credentialsFromEnv(): { url: string; token: string } | null {
+  const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+  const token =
+    process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+  return url && token ? { url, token } : null;
+}
+
 export function isOnlineModeEnabled(): boolean {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  );
+  return credentialsFromEnv() !== null;
 }
 
 // Only constructed when the routes that need it are actually invoked, which
 // only happens when isOnlineModeEnabled() is true — the client never links
 // to those routes otherwise.
 function getRedis(): Redis {
-  return Redis.fromEnv();
+  const credentials = credentialsFromEnv();
+  if (!credentials) {
+    throw new Error("Redis is not configured (see isOnlineModeEnabled)");
+  }
+  return new Redis(credentials);
 }
 
 const ROOM_TTL_SECONDS = 60 * 60 * 2; // 2 hours

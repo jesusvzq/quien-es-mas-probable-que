@@ -34,6 +34,8 @@ function postJson(url: string, body: unknown) {
 
 beforeEach(() => {
   store.clear();
+  delete process.env.KV_REST_API_URL;
+  delete process.env.KV_REST_API_TOKEN;
   process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
   process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 });
@@ -48,6 +50,15 @@ describe("/api/config", () => {
     delete process.env.UPSTASH_REDIS_REST_URL;
     const res = await configRoute();
     expect(await res.json()).toEqual({ onlineEnabled: false });
+  });
+
+  it("also works with Vercel's KV_REST_API_* naming", async () => {
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    process.env.KV_REST_API_URL = "https://example.upstash.io";
+    process.env.KV_REST_API_TOKEN = "test-token";
+    const res = await configRoute();
+    expect(await res.json()).toEqual({ onlineEnabled: true });
   });
 });
 
