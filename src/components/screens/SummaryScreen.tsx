@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { BigButton } from "@/components/ui/BigButton";
 import { CompatMeter } from "@/components/ui/CompatMeter";
 import { ScreenShell } from "@/components/ui/ScreenShell";
@@ -14,34 +13,12 @@ export function SummaryScreen({
   state: GameState;
   dispatch: React.Dispatch<Action>;
 }) {
-  const [copied, setCopied] = useState(false);
-
   if (!state.players) return null;
   const [p0, p1] = state.players;
   const summary = computeSummary(state.results);
   const [votes0, votes1] = countVotesPerPlayer(state.results);
   const mostLikely =
     votes0 === votes1 ? null : votes0 > votes1 ? p0 : p1;
-
-  const shareText = `¡Hemos coincidido en ${summary.matches} de ${summary.total} rondas (${summary.percentage}%) jugando a "¿Quién es más probable que...?"! ${summary.tier.emoji} ${summary.tier.label}`;
-
-  async function handleShare() {
-    if (navigator.share) {
-      try {
-        await navigator.share({ text: shareText });
-        return;
-      } catch {
-        // user cancelled or share failed; fall back to clipboard
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard unavailable; silently ignore
-    }
-  }
 
   return (
     <ScreenShell>
@@ -98,9 +75,6 @@ export function SummaryScreen({
           onClick={() => dispatch({ type: "CHANGE_PLAYERS" })}
         >
           Cambiar jugadores
-        </BigButton>
-        <BigButton variant="ghost" onClick={handleShare}>
-          {copied ? "¡Copiado!" : "Compartir resultado"}
         </BigButton>
       </div>
     </ScreenShell>
