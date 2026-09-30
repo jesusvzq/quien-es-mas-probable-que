@@ -1,6 +1,7 @@
 "use client";
 
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 
 const RULES = [
@@ -14,6 +15,7 @@ const RULES = [
 export function RulesScreen({ onContinue }: { onContinue: () => void }) {
   return (
     <ScreenShell>
+      <DevCredit />
       <div className="text-center">
         <h1 className="text-3xl font-extrabold text-primary">
           ¿Quién es más probable que...?

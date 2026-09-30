@@ -8,6 +8,7 @@ import { OnlineRoundScreen } from "@/components/screens/online/OnlineRoundScreen
 import { OnlineSummaryScreen } from "@/components/screens/online/OnlineSummaryScreen";
 import { WaitingScreen } from "@/components/screens/online/WaitingScreen";
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import { useOnlineRoom } from "@/lib/online/useOnlineRoom";
 
@@ -44,6 +45,7 @@ export function OnlineGame({
   if (room.status === "error") {
     return (
       <ScreenShell>
+        <DevCredit />
         <div className="rounded-2xl bg-surface p-6 text-center shadow-sm">
           <p className="text-lg font-semibold">
             {room.error ?? "Esta sala ya no existe."}

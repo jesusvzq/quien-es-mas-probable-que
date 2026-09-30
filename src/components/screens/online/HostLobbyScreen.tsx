@@ -3,6 +3,7 @@
 import QRCode from "qrcode";
 import { useEffect, useRef } from "react";
 import { WaitingScreen } from "@/components/screens/online/WaitingScreen";
+import { DevCredit } from "@/components/ui/DevCredit";
 
 export function HostLobbyScreen({ code }: { code: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,6 +19,7 @@ export function HostLobbyScreen({ code }: { code: string }) {
 
   return (
     <WaitingScreen message="Esperando a que se una tu rival...">
+      <DevCredit />
       <div className="flex flex-col items-center gap-4 rounded-2xl bg-surface p-6 text-center shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-wide text-foreground/50">
           Código de la sala

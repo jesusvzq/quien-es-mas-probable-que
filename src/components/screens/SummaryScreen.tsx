@@ -2,6 +2,7 @@
 
 import { SummaryCard } from "@/components/screens/shared/SummaryCard";
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import type { Action, GameState } from "@/lib/game/types";
 
@@ -16,6 +17,7 @@ export function SummaryScreen({
 
   return (
     <ScreenShell>
+      <DevCredit />
       <SummaryCard players={state.players} results={state.results} />
 
       <div className="flex flex-col gap-3">

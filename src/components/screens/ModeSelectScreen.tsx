@@ -1,6 +1,7 @@
 "use client";
 
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 
 export function ModeSelectScreen({
@@ -16,6 +17,7 @@ export function ModeSelectScreen({
 }) {
   return (
     <ScreenShell>
+      <DevCredit />
       <div className="text-center">
         <h2 className="text-2xl font-extrabold">¿Cómo queréis jugar?</h2>
         <p className="mt-2 text-sm text-foreground/60">

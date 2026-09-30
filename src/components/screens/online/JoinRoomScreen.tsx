@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import { MAX_NAME_LENGTH } from "@/lib/game/types";
 
@@ -37,6 +38,7 @@ export function JoinRoomScreen({
 
   return (
     <ScreenShell>
+      <DevCredit />
       <h2 className="text-center text-2xl font-extrabold">
         Unirse a una partida
       </h2>

@@ -2,6 +2,7 @@
 
 import { SummaryCard } from "@/components/screens/shared/SummaryCard";
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import type { RoomView } from "@/lib/online/types";
 
@@ -19,6 +20,7 @@ export function OnlineSummaryScreen({
 
   return (
     <ScreenShell>
+      <DevCredit />
       <SummaryCard players={[p0, p1]} results={view.results} />
 
       <div className="flex flex-col gap-3">

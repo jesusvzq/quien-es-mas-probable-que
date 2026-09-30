@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { RoundsWheel } from "@/components/ui/RoundsWheel";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import { MAX_NAME_LENGTH, MAX_ROUNDS, MIN_ROUNDS } from "@/lib/game/types";
@@ -33,6 +34,7 @@ export function CreateRoomScreen({
 
   return (
     <ScreenShell>
+      <DevCredit />
       <h2 className="text-center text-2xl font-extrabold">Crear partida</h2>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">

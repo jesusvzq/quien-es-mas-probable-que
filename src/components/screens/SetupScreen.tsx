@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BigButton } from "@/components/ui/BigButton";
+import { DevCredit } from "@/components/ui/DevCredit";
 import { RoundsWheel } from "@/components/ui/RoundsWheel";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import type { Action } from "@/lib/game/types";
@@ -51,6 +52,7 @@ export function SetupScreen({
 
   return (
     <ScreenShell>
+      <DevCredit />
       <h2 className="text-center text-2xl font-extrabold">
         ¿Quiénes juegan?
       </h2>
