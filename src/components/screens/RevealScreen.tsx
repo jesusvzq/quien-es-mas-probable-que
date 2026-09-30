@@ -23,6 +23,7 @@ export function RevealScreen({
       onContinue={() =>
         dispatch({ type: isLastRound ? "FINISH_GAME" : "NEXT_ROUND" })
       }
+      onFinish={() => dispatch({ type: "FINISH_GAME" })}
     />
   );
 }

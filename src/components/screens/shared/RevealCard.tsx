@@ -4,6 +4,7 @@ import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { BigButton } from "@/components/ui/BigButton";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ScreenShell } from "@/components/ui/ScreenShell";
 import type { RoundResult } from "@/lib/game/types";
 
@@ -18,13 +19,16 @@ export function RevealCard({
   lastResult,
   isLastRound,
   onContinue,
+  onFinish,
 }: {
   players: [string, string];
   lastResult: RoundResult;
   isLastRound: boolean;
   onContinue: () => void;
+  onFinish?: () => void;
 }) {
   const [suspense, setSuspense] = useState(true);
+  const [confirmingFinish, setConfirmingFinish] = useState(false);
   const [p0, p1] = players;
   const noMatchMessage =
     NO_MATCH_MESSAGES[lastResult.round % NO_MATCH_MESSAGES.length];
@@ -85,6 +89,22 @@ export function RevealCard({
         <BigButton onClick={onContinue}>
           {isLastRound ? "Ver resultados" : "Siguiente ronda"}
         </BigButton>
+      )}
+
+      {!suspense && !isLastRound && onFinish && (
+        <BigButton variant="ghost" onClick={() => setConfirmingFinish(true)}>
+          Terminar partida
+        </BigButton>
+      )}
+
+      {confirmingFinish && onFinish && (
+        <ConfirmDialog
+          title="¿Terminar la partida?"
+          message="Se acabará la partida ahora mismo y veréis el resumen con las preguntas respondidas hasta el momento."
+          confirmLabel="Sí, terminar"
+          onConfirm={onFinish}
+          onCancel={() => setConfirmingFinish(false)}
+        />
       )}
     </ScreenShell>
   );

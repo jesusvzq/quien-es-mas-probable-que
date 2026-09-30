@@ -90,7 +90,13 @@ export function OnlineGame({
     if (view.advanceReady[view.you]) {
       return <WaitingScreen message="Esperando a que tu rival continúe..." />;
     }
-    return <OnlineRevealScreen view={view} onAdvance={room.advance} />;
+    return (
+      <OnlineRevealScreen
+        view={view}
+        onAdvance={room.advance}
+        onFinish={room.finish}
+      />
+    );
   }
 
   return (

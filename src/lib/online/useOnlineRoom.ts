@@ -151,6 +151,7 @@ export function useOnlineRoom() {
   const castVote = useCallback((vote: PlayerIndex) => mutate("vote", { vote }), [mutate]);
   const advance = useCallback(() => mutate("advance"), [mutate]);
   const replay = useCallback(() => mutate("replay"), [mutate]);
+  const finish = useCallback(() => mutate("finish"), [mutate]);
 
   const reset = useCallback(() => {
     clearOnlineSession();
@@ -167,6 +168,7 @@ export function useOnlineRoom() {
     castVote,
     advance,
     replay,
+    finish,
     reset,
   };
 }

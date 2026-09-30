@@ -21,6 +21,7 @@ import { GET as configRoute } from "@/app/api/config/route";
 import { POST as createRoute } from "@/app/api/rooms/route";
 import { GET as pollRoute } from "@/app/api/rooms/[code]/route";
 import { POST as advanceRoute } from "@/app/api/rooms/[code]/advance/route";
+import { POST as finishRoute } from "@/app/api/rooms/[code]/finish/route";
 import { POST as joinRoute } from "@/app/api/rooms/[code]/join/route";
 import { POST as voteRoute } from "@/app/api/rooms/[code]/vote/route";
 
@@ -148,6 +149,45 @@ describe("room routes wiring", () => {
     const guestAdvanceView = await guestAdvanceRes.json();
     expect(guestAdvanceView.phase).toBe("voting");
     expect(guestAdvanceView.currentRound).toBe(2);
+  });
+
+  it("lets either player finish the game early from reveal, ending it for both", async () => {
+    const createRes = await createRoute(
+      postJson("http://x/api/rooms", { hostName: "Ana", totalRounds: 10 })
+    );
+    const { code, token: hostToken } = await createRes.json();
+
+    const joinRes = await joinRoute(
+      postJson(`http://x/api/rooms/${code}/join`, { name: "Luis" }),
+      { params: { code } }
+    );
+    const { token: guestToken } = await joinRes.json();
+
+    await voteRoute(
+      postJson(`http://x/api/rooms/${code}/vote`, { token: hostToken, vote: 0 }),
+      { params: { code } }
+    );
+    const secondVoteRes = await voteRoute(
+      postJson(`http://x/api/rooms/${code}/vote`, { token: guestToken, vote: 0 }),
+      { params: { code } }
+    );
+    expect((await secondVoteRes.json()).phase).toBe("reveal");
+
+    const finishRes = await finishRoute(
+      postJson(`http://x/api/rooms/${code}/finish`, { token: hostToken }),
+      { params: { code } }
+    );
+    expect(finishRes.status).toBe(200);
+    const finishedView = await finishRes.json();
+    expect(finishedView.phase).toBe("summary");
+    expect(finishedView.currentRound).toBe(1);
+
+    // The guest's next poll picks up the same summary, without them acting.
+    const guestPollRes = await pollRoute(
+      new Request(`http://x/api/rooms/${code}?token=${guestToken}`),
+      { params: { code } }
+    );
+    expect((await guestPollRes.json()).phase).toBe("summary");
   });
 
   it("404s joining a room that doesn't exist", async () => {

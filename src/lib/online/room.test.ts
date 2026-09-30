@@ -3,6 +3,7 @@ import {
   castVote,
   confirmAdvance,
   createRoom,
+  finishRoom,
   joinRoom,
   replayRoom,
   toView,
@@ -133,6 +134,24 @@ describe("confirmAdvance", () => {
   it("is a no-op outside the reveal phase", () => {
     const room = setupRoom();
     expect(confirmAdvance(room, 0)).toBe(room);
+  });
+});
+
+describe("finishRoom", () => {
+  it("jumps straight to summary from reveal, regardless of the round", () => {
+    const room = setupRoom(10);
+    let s = castVote(room, 0, 1);
+    s = castVote(s, 1, 1);
+    s = finishRoom(s);
+    expect(s.phase).toBe("summary");
+    expect(s.currentRound).toBe(1);
+    expect(s.results).toHaveLength(1);
+    expect(s.advanceReady).toEqual([false, false]);
+  });
+
+  it("is a no-op outside the reveal phase", () => {
+    const room = setupRoom();
+    expect(finishRoom(room)).toBe(room);
   });
 });
 

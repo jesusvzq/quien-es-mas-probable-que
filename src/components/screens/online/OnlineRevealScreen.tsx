@@ -6,9 +6,11 @@ import type { RoomView } from "@/lib/online/types";
 export function OnlineRevealScreen({
   view,
   onAdvance,
+  onFinish,
 }: {
   view: RoomView;
   onAdvance: () => void;
+  onFinish: () => void;
 }) {
   const lastResult = view.results[view.results.length - 1];
   const [p0, p1] = view.players;
@@ -22,6 +24,7 @@ export function OnlineRevealScreen({
       lastResult={lastResult}
       isLastRound={isLastRound}
       onContinue={onAdvance}
+      onFinish={onFinish}
     />
   );
 }

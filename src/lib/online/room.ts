@@ -118,6 +118,13 @@ function advanceRound(room: RoomState): RoomState {
   };
 }
 
+/** Either player can end the game early from the reveal screen; the other
+ * player's device picks up the resulting `summary` phase on its next poll. */
+export function finishRoom(room: RoomState): RoomState {
+  if (room.phase !== "reveal") return room;
+  return { ...room, phase: "summary", advanceReady: [false, false] };
+}
+
 export function replayRoom(room: RoomState): RoomState {
   if (room.phase !== "summary") return room;
   const statement = pickStatement([]);

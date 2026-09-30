@@ -94,6 +94,18 @@ describe("gameReducer phase transitions", () => {
     expect(s.results).toHaveLength(10);
   });
 
+  it("FINISH_GAME can end the game early, keeping only the results played so far", () => {
+    let s = setupGame(10);
+    s = gameReducer(s, { type: "CAST_VOTE", playerIndex: 0 });
+    s = gameReducer(s, { type: "ARRIVE_AT_SECOND_VOTER" });
+    s = gameReducer(s, { type: "CAST_VOTE", playerIndex: 0 });
+    expect(s.phase).toBe("reveal");
+    expect(s.currentRound).toBe(1);
+    s = gameReducer(s, { type: "FINISH_GAME" });
+    expect(s.phase).toBe("summary");
+    expect(s.results).toHaveLength(1);
+  });
+
   it("never repeats a statement across a full 50-round game", () => {
     let s = setupGame(50);
     s = play(s, 50);
