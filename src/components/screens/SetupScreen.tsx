@@ -7,7 +7,13 @@ import { ScreenShell } from "@/components/ui/ScreenShell";
 import type { Action } from "@/lib/game/types";
 import { MAX_NAME_LENGTH, MAX_ROUNDS, MIN_ROUNDS } from "@/lib/game/types";
 
-export function SetupScreen({ dispatch }: { dispatch: React.Dispatch<Action> }) {
+export function SetupScreen({
+  dispatch,
+  onBack,
+}: {
+  dispatch: React.Dispatch<Action>;
+  onBack?: () => void;
+}) {
   const [name1, setName1] = useState("");
   const [name2, setName2] = useState("");
   const [rounds, setRounds] = useState(MIN_ROUNDS);
@@ -91,6 +97,11 @@ export function SetupScreen({ dispatch }: { dispatch: React.Dispatch<Action> }) 
         </div>
 
         <BigButton type="submit">Elegir quién empieza</BigButton>
+        {onBack && (
+          <BigButton type="button" variant="ghost" onClick={onBack}>
+            Volver
+          </BigButton>
+        )}
       </form>
     </ScreenShell>
   );

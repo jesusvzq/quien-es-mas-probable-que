@@ -7,10 +7,12 @@ export function ModeSelectScreen({
   onSingleDevice,
   onCreate,
   onJoin,
+  onBack,
 }: {
   onSingleDevice: () => void;
   onCreate: () => void;
   onJoin: () => void;
+  onBack: () => void;
 }) {
   return (
     <ScreenShell>
@@ -28,6 +30,9 @@ export function ModeSelectScreen({
         </BigButton>
         <BigButton variant="ghost" onClick={onJoin}>
           Unirse a partida online
+        </BigButton>
+        <BigButton variant="ghost" onClick={onBack}>
+          Volver
         </BigButton>
       </div>
     </ScreenShell>

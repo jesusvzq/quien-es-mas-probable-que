@@ -32,7 +32,7 @@ export function gameReducer(state: GameState, action: Action): GameState {
     }
 
     case "CONFIRM_SETUP": {
-      if (state.phase !== "setup") return state;
+      if (state.phase !== "setup" && state.phase !== "rules") return state;
       return {
         ...state,
         players: action.players,
