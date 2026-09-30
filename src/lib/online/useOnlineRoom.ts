@@ -58,15 +58,20 @@ export function useOnlineRoom() {
       } catch (err) {
         if (signal?.aborted) return;
         clearOnlineSession();
-        setState((s) =>
-          s.code === code
-            ? {
-                ...s,
-                status: "error",
-                error: err instanceof Error ? err.message : "Sala no encontrada",
-              }
-            : s
-        );
+        setState((s) => {
+          if (s.code !== code) return s;
+          // Never successfully loaded this room (e.g. a stale session from a
+          // previous visit whose room has since expired): start fresh
+          // instead of showing a dead-end "not found" error screen.
+          if (s.view === null) {
+            return { code: null, token: null, view: null, status: "idle", error: null };
+          }
+          return {
+            ...s,
+            status: "error",
+            error: err instanceof Error ? err.message : "Sala no encontrada",
+          };
+        });
       }
     },
     [code, token]
